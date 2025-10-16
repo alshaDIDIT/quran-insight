@@ -1,94 +1,59 @@
-import Image from "next/image";
+'use client';
+
+import { useEffect, useState } from 'react';
 import styles from "./page.module.css";
+import { fetchChapters } from './actions';
+import { GetChaptersResponse } from './Models/Responses/GetChaptersResponse';
 
 export default function Home() {
+  const [chapters, setChapters] = useState<GetChaptersResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function loadChapters() {
+      try {
+        setLoading(true);
+        const result = await fetchChapters();
+        if (result.success && result.data) {
+          setChapters(result.data);
+        } else {
+          setError(result.error || 'Failed to fetch chapters');
+        }
+      } catch (err) {
+        setError(`Error: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadChapters();
+  }, []);
+
   return (
     <div className={styles.page}>
       <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol>
-          <li>
-            Get started by editing <code>src/app/page.tsx</code>.
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
-
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.secondary}
-          >
-            Read our docs
-          </a>
-        </div>
+        <h1>Quran Insight</h1>
+        
+        {loading && <p>Loading chapters...</p>}
+        
+        {error && <p style={{ color: 'red' }}>Error: {error}</p>}
+        
+        {chapters && chapters.chapters && (
+          <div>
+            <h2>Chapters ({chapters.chapters.length})</h2>
+            {chapters.chapters.map((chapter) => (
+              <p key={chapter.id}>
+                <strong>Chapter {chapter.id}:</strong> {chapter.name_arabic}
+                {chapter.translated_name && ` (${chapter.translated_name.name})`}
+                {chapter.verses_count && ` - ${chapter.verses_count} verses`}
+              </p>
+            ))}
+          </div>
+        )}
       </main>
       <footer className={styles.footer}>
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
+        
       </footer>
     </div>
   );
