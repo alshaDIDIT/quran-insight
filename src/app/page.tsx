@@ -4,6 +4,7 @@ import styles from "./page.module.css";
 import { useEffect } from 'react';
 import { useChapter } from "./Hooks/ChapterHook";
 import { useChapters } from "./Hooks/ChaptersHook";
+import { useChapterInfo } from "./Hooks/ChapterInfoHook";
 
 export default function Home() {
   const { 
@@ -19,13 +20,21 @@ export default function Home() {
     error: chaptersError,
     loadChapters
   } = useChapters();
-  
-  const loading = chapterLoading || chaptersLoading;
-  const error = chapterError || chaptersError;
+
+  const {
+    chapterInfo,
+    loading: chapterInfoLoading,
+    error: chapterInfoError,
+    loadChapterInfoById
+  } = useChapterInfo();
+
+  const loading = chapterLoading || chaptersLoading || chapterInfoLoading;
+  const error = chapterError || chaptersError || chapterInfoError;
 
   useEffect(() => {
     loadChapterById(2);
     loadChapters();
+    loadChapterInfoById(2);
   }, []);
 
   return (
@@ -42,6 +51,15 @@ export default function Home() {
               <strong>Chapter {chapter.id}:</strong> {chapter.name_arabic}
               {chapter.translated_name && ` (${chapter.translated_name.name})`}
               {chapter.verses_count && ` - ${chapter.verses_count} verses`}
+            </p>
+          </div>
+        )}
+
+        {chapterInfo && (
+          <div>
+            <h2>Chapter Info</h2>
+            <p>
+              <strong>Chapter {chapterInfo.chapter_id} Info:</strong> {chapterInfo.short_text}
             </p>
           </div>
         )}

@@ -3,6 +3,7 @@
 import { makeAuthenticatedRequest, withAuth } from './RequestService';
 import { Chapter } from '../Models/Chapter';
 import { Chapters } from '../Models/Chapters';
+import { ChapterInfo } from '../Models/ChapterInfo';
 
 const URL = process.env.QURAN_API_BASE_URL;
 const PATH = '/chapters';
@@ -20,6 +21,14 @@ async function getChapters(
 ): Promise<Chapters | undefined> {
   const url = `${URL}${PATH}`;
   return await makeAuthenticatedRequest<Chapters>(url, accessToken);
+}
+
+async function getChapterInfo(
+  accessToken: string,
+  id: number
+): Promise<ChapterInfo | undefined> {
+  const url = `${URL}${PATH}/${id}/info`;
+  return await makeAuthenticatedRequest<ChapterInfo>(url, accessToken);
 }
 
 export async function fetchChapterById(id: number): Promise<{
@@ -66,6 +75,30 @@ export async function fetchChapters(): Promise<{
     return { 
       success: false, 
       error: error instanceof Error ? error.message : 'Unknown error' 
+    };
+  }
+}
+
+export async function fetchChapterInfoById(id: number): Promise<{
+  success: boolean;
+  data?: ChapterInfo;
+  error?: string;
+}> {
+  try {
+    const chapterInfo = await withAuth(
+      (accessToken) => getChapterInfo(accessToken, id),
+      'getChapterInfoWithAuth'
+    );
+
+    if (chapterInfo) {
+      return { success: true, data: (chapterInfo as any).chapter_info || chapterInfo };
+    } else {
+      return { success: false, error: 'Failed to fetch chapter info' };
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
     };
   }
 }
