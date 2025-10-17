@@ -1,8 +1,8 @@
 'use server';
 
 import { makeAuthenticatedRequest, withAuth } from './RequestService';
-
-type Chapters = any;
+import { Chapter } from '../Models/Chapter';
+import { Chapters } from '../Models/Chapters';
 
 const URL = process.env.QURAN_API_BASE_URL;
 const PATH = '/chapters';
@@ -10,11 +10,11 @@ const PATH = '/chapters';
 async function getChapter(
   accessToken: string,
   id: number
-): Promise<Chapters | undefined> {
+): Promise<Chapter | undefined> {
   const url = `${URL}${PATH}/${id}`;
-  return await makeAuthenticatedRequest<Chapters>(url, accessToken);
+  return await makeAuthenticatedRequest<Chapter>(url, accessToken);
 }
-  
+
 async function getChapters(
   accessToken: string
 ): Promise<Chapters | undefined> {
@@ -22,29 +22,19 @@ async function getChapters(
   return await makeAuthenticatedRequest<Chapters>(url, accessToken);
 }
 
-async function getChapterWithAuth(id: number): Promise<Chapters | undefined> {
-  return await withAuth(
-    (accessToken) => getChapter(accessToken, id),
-    'getChapterWithAuth'
-  );
-}
-
-async function getChaptersWithAuth(): Promise<Chapters | undefined> {
-  return await withAuth(
-    (accessToken) => getChapters(accessToken),
-    'getChaptersWithAuth'
-  );
-}
-
-async function fetchChapterById(id: number): Promise<{
+export async function fetchChapterById(id: number): Promise<{
   success: boolean;
-  data?: Chapters;
+  data?: Chapter;
   error?: string;
 }> {
   try {
-    const chapter = await getChapterWithAuth(id);
+    const chapter = await withAuth(
+      (accessToken) => getChapter(accessToken, id),
+      'getChapterWithAuth'
+    );
+
     if (chapter) {
-      return { success: true, data: chapter };
+      return { success: true, data: (chapter as any).chapter || chapter };
     } else {
       return { success: false, error: 'Failed to fetch chapter' };
     }
@@ -62,7 +52,11 @@ export async function fetchChapters(): Promise<{
   error?: string;
 }> {
   try {
-    const chapters = await getChaptersWithAuth();
+    const chapters = await withAuth(
+      (accessToken) => getChapters(accessToken),
+      'getChaptersWithAuth'
+    );
+
     if (chapters) {
       return { success: true, data: chapters };
     } else {

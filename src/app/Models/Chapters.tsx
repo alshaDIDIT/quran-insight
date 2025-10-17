@@ -1,5 +1,5 @@
 import { Chapter } from "./Chapter";
 
-export interface GetChaptersResponse {
+export interface Chapters {
   chapters: Chapter[];
 }

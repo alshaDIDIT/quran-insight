@@ -1,42 +1,30 @@
 'use client';
 
 import styles from "./page.module.css";
-import { useEffect, useState } from 'react';
-import { fetchChapters } from './Services/ChapterService';
-
-type Chapter = {
-  id: number;
-  name_arabic: string;
-  translated_name?: { name: string } | null;
-  verses_count?: number | null;
-};
-
-type Chapters = {
-  chapters: Chapter[];
-};
+import { useEffect } from 'react';
+import { useChapter } from "./Hooks/ChapterHook";
+import { useChapters } from "./Hooks/ChaptersHook";
 
 export default function Home() {
-  const [chapters, setChapters] = useState<Chapters | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { 
+    chapter,
+    loading: chapterLoading,
+    error: chapterError,
+    loadChapterById
+  } = useChapter();
+  
+  const { 
+    chapters,
+    loading: chaptersLoading,
+    error: chaptersError,
+    loadChapters
+  } = useChapters();
+  
+  const loading = chapterLoading || chaptersLoading;
+  const error = chapterError || chaptersError;
 
   useEffect(() => {
-    async function loadChapters() {
-      try {
-        setLoading(true);
-        const result = await fetchChapters();
-        if (result.success && result.data) {
-          setChapters(result.data);
-        } else {
-          setError(result.error || 'Failed to fetch chapters');
-        }
-      } catch (err) {
-        setError(`Error: ${err instanceof Error ? err.message : 'Unknown error'}`);
-      } finally {
-        setLoading(false);
-      }
-    }
-
+    loadChapterById(2);
     loadChapters();
   }, []);
 
@@ -44,11 +32,20 @@ export default function Home() {
     <div className={styles.page}>
       <main className={styles.main}>
         <h1>Quran Insight</h1>
-        
         {loading && <p>Loading chapters...</p>}
-        
+
         {error && <p style={{ color: 'red' }}>Error: {error}</p>}
-        
+
+        {chapter && (
+          <div>
+            <p>
+              <strong>Chapter {chapter.id}:</strong> {chapter.name_arabic}
+              {chapter.translated_name && ` (${chapter.translated_name.name})`}
+              {chapter.verses_count && ` - ${chapter.verses_count} verses`}
+            </p>
+          </div>
+        )}
+                
         {chapters && chapters.chapters && (
           <div>
             <h2>Chapters ({chapters.chapters.length})</h2>
@@ -62,6 +59,7 @@ export default function Home() {
           </div>
         )}
       </main>
+
       <footer className={styles.footer}>
         
       </footer>
