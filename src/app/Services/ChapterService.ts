@@ -1,19 +1,11 @@
 'use server';
 
-import { getAccessToken } from '../Auth/AccessTokenService';
-import { makeAuthenticatedRequest } from './RequestService';
+import { makeAuthenticatedRequest, withAuth } from './RequestService';
 
 type Chapters = any;
 
 const URL = process.env.QURAN_API_BASE_URL;
 const PATH = '/chapters';
-  
-async function getChapters(
-  accessToken: string
-): Promise<Chapters | undefined> {
-  const url = `${URL}${PATH}`;
-  return await makeAuthenticatedRequest<Chapters>(url, accessToken);
-}
 
 async function getChapter(
   accessToken: string,
@@ -22,19 +14,45 @@ async function getChapter(
   const url = `${URL}${PATH}/${id}`;
   return await makeAuthenticatedRequest<Chapters>(url, accessToken);
 }
+  
+async function getChapters(
+  accessToken: string
+): Promise<Chapters | undefined> {
+  const url = `${URL}${PATH}`;
+  return await makeAuthenticatedRequest<Chapters>(url, accessToken);
+}
+
+async function getChapterWithAuth(id: number): Promise<Chapters | undefined> {
+  return await withAuth(
+    (accessToken) => getChapter(accessToken, id),
+    'getChapterWithAuth'
+  );
+}
 
 async function getChaptersWithAuth(): Promise<Chapters | undefined> {
-  try {
-    const accessToken = await getAccessToken();
-    if (!accessToken) {
-      console.error('Failed to obtain access token');
-      return undefined;
-    }
+  return await withAuth(
+    (accessToken) => getChapters(accessToken),
+    'getChaptersWithAuth'
+  );
+}
 
-    return await getChapters(accessToken);
+async function fetchChapterById(id: number): Promise<{
+  success: boolean;
+  data?: Chapters;
+  error?: string;
+}> {
+  try {
+    const chapter = await getChapterWithAuth(id);
+    if (chapter) {
+      return { success: true, data: chapter };
+    } else {
+      return { success: false, error: 'Failed to fetch chapter' };
+    }
   } catch (error) {
-    console.error('Error in getChaptersWithAuth:', error);
-    return undefined;
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
   }
 }
 

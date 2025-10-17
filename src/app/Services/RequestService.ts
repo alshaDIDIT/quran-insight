@@ -1,5 +1,5 @@
 import axios, { AxiosResponse } from "axios";
-import { getClientCredentials } from "../Auth/AccessTokenService";
+import { getAccessToken, getClientCredentials } from "../Auth/AccessTokenService";
 
 export async function makeAuthenticatedRequest<T>(
   url: string,
@@ -20,6 +20,24 @@ export async function makeAuthenticatedRequest<T>(
     return response.data;
   } catch (error) {
     console.error(`Error making request to ${url}:`, error);
+    return undefined;
+  }
+}
+
+export async function withAuth<T>(
+  apiCall: (accessToken: string) => Promise<T | undefined>,
+  errorContext: string
+): Promise<T | undefined> {
+  try {
+    const accessToken = await getAccessToken();
+    if (!accessToken) {
+      console.error('Failed to obtain access token');
+      return undefined;
+    }
+
+    return await apiCall(accessToken);
+  } catch (error) {
+    console.error(`Error in ${errorContext}:`, error);
     return undefined;
   }
 }
