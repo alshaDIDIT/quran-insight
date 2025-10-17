@@ -1,68 +1,29 @@
-import axios, { AxiosResponse } from 'axios';
-import { GetChaptersResponse } from '../Models/Responses/GetChaptersResponse';
-import { AuthTokenResponse } from '../Models/Auth/AuthTokenResponse';
+'use server';
 
-// Configuration constants
-const QURAN_AUTH_URL = process.env.QURAN_AUTH_URL || 'https://prelive-oauth2.quran.foundation/oauth2/token';
-const QURAN_API_BASE_URL = process.env.QURAN_API_BASE_URL || 'https://apis-prelive.quran.foundation/content/api/v4';
+import { getAccessToken } from '../Auth/AccessTokenService';
+import { makeAuthenticatedRequest } from './RequestService';
 
-// Helper function to get client credentials
-function getClientCredentials() {
-  const clientId = process.env.QURAN_CLIENT_ID;
-  const clientSecret = process.env.QURAN_CLIENT_SECRET;
+type Chapters = any;
 
-  if (!clientId || !clientSecret) {
-    throw new Error('Missing required environment variables: QURAN_CLIENT_ID or QURAN_CLIENT_SECRET');
-  }
-
-  return { clientId, clientSecret };
-}
-
-export async function getAccessToken(): Promise<string | undefined> {
-  try {
-    const { clientId, clientSecret } = getClientCredentials();
-    const auth = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
-
-    const response: AxiosResponse<AuthTokenResponse> = await axios({
-      method: 'post',
-      url: QURAN_AUTH_URL,
-      headers: {
-        'Authorization': `Basic ${auth}`,
-        'Content-Type': 'application/x-www-form-urlencoded'
-      },
-      data: 'grant_type=client_credentials&scope=content'
-    });
-
-    return response.data.access_token;
-  } catch (error) {
-    console.error('Error getting access token:', error);
-    return undefined;
-  }
-}
-
-export async function getChapters(
+const URL = process.env.QURAN_API_BASE_URL;
+const PATH = '/chapters';
+  
+async function getChapters(
   accessToken: string
-): Promise<GetChaptersResponse | undefined> {
-  try {
-    const { clientId } = getClientCredentials();
-
-    const response: AxiosResponse<GetChaptersResponse> = await axios({
-      method: 'get',
-      url: `${QURAN_API_BASE_URL}/chapters`,
-      headers: {
-        'x-auth-token': accessToken,
-        'x-client-id': clientId,
-      },
-    });
-
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching chapters:', error);
-    return undefined;
-  }
+): Promise<Chapters | undefined> {
+  const url = `${URL}${PATH}`;
+  return await makeAuthenticatedRequest<Chapters>(url, accessToken);
 }
 
-export async function getChaptersWithAuth(): Promise<GetChaptersResponse | undefined> {
+async function getChapter(
+  accessToken: string,
+  id: number
+): Promise<Chapters | undefined> {
+  const url = `${URL}${PATH}/${id}`;
+  return await makeAuthenticatedRequest<Chapters>(url, accessToken);
+}
+
+async function getChaptersWithAuth(): Promise<Chapters | undefined> {
   try {
     const accessToken = await getAccessToken();
     if (!accessToken) {
@@ -74,5 +35,25 @@ export async function getChaptersWithAuth(): Promise<GetChaptersResponse | undef
   } catch (error) {
     console.error('Error in getChaptersWithAuth:', error);
     return undefined;
+  }
+}
+
+export async function fetchChapters(): Promise<{
+  success: boolean;
+  data?: Chapters;
+  error?: string;
+}> {
+  try {
+    const chapters = await getChaptersWithAuth();
+    if (chapters) {
+      return { success: true, data: chapters };
+    } else {
+      return { success: false, error: 'Failed to fetch chapters' };
+    }
+  } catch (error) {
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    };
   }
 }

@@ -1,4 +1,4 @@
-import { Chapter } from "../Chapter";
+import { Chapter } from "./Chapter";
 
 export interface GetChaptersResponse {
   chapters: Chapter[];

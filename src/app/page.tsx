@@ -1,12 +1,22 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import styles from "./page.module.css";
-import { fetchChapters } from './actions';
-import { GetChaptersResponse } from './Models/Responses/GetChaptersResponse';
+import { useEffect, useState } from 'react';
+import { fetchChapters } from './Services/ChapterService';
+
+type Chapter = {
+  id: number;
+  name_arabic: string;
+  translated_name?: { name: string } | null;
+  verses_count?: number | null;
+};
+
+type Chapters = {
+  chapters: Chapter[];
+};
 
 export default function Home() {
-  const [chapters, setChapters] = useState<GetChaptersResponse | null>(null);
+  const [chapters, setChapters] = useState<Chapters | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
