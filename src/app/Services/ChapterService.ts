@@ -1,9 +1,9 @@
 'use server';
 
 import { makeAuthenticatedRequest, withAuth } from './RequestService';
-import { Chapter } from '../Models/Chapter';
-import { Chapters } from '../Models/Chapters';
-import { ChapterInfo } from '../Models/ChapterInfo';
+import { Chapter } from '../Models/Chapters/Chapter';
+import { Chapters } from '../Models/Chapters/Chapters';
+import { ChapterInfo } from '../Models/Chapters/ChapterInfo';
 
 const URL = process.env.QURAN_API_BASE_URL;
 const PATH = '/chapters';

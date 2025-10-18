@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { fetchChapters } from '../Services/ChapterService';
-import { Chapters } from '../Models/Chapters';
+import { Chapters } from '../Models/Chapters/Chapters';
 
 export function useChapters() {
   const [chapters, setChapters] = useState<Chapters | null>(null);

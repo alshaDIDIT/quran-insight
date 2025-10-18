@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { fetchChapterInfoById } from '../Services/ChapterService';
-import { ChapterInfo } from '../Models/ChapterInfo';
+import { ChapterInfo } from '../Models/Chapters/ChapterInfo';
 
 export function useChapterInfo() {
   const [chapterInfo, setChapterInfo] = useState<ChapterInfo | null>(null);
@@ -16,8 +16,6 @@ export function useChapterInfo() {
       const result = await fetchChapterInfoById(id);
 
       if (result.success && result.data) {
-        console.log('Fetched chapter info:', result.data);
-        console.log('Chapter info properties:', Object.keys(result.data));
         setChapterInfo(result.data);
       } else {
         setError(result.error || `Failed to fetch chapter with ID ${id}`);

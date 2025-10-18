@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 import { useChapter } from "./Hooks/ChapterHook";
 import { useChapters } from "./Hooks/ChaptersHook";
 import { useChapterInfo } from "./Hooks/ChapterInfoHook";
+import { useByPage } from "./Hooks/VersesHooks/ByPageHook";
 
 export default function Home() {
   const { 
@@ -28,13 +29,30 @@ export default function Home() {
     loadChapterInfoById
   } = useChapterInfo();
 
-  const loading = chapterLoading || chaptersLoading || chapterInfoLoading;
-  const error = chapterError || chaptersError || chapterInfoError;
+  const {
+    verses,
+    loading: versesLoading,
+    error: versesError,
+    loadVersesByPage
+  } = useByPage();
+
+  const loading = 
+    chapterLoading 
+    || chaptersLoading 
+    || chapterInfoLoading
+    || versesLoading;
+  
+  const error = 
+    chapterError
+    || chaptersError
+    || chapterInfoError
+    || versesError;
 
   useEffect(() => {
     loadChapterById(2);
     loadChapters();
-    loadChapterInfoById(2);
+    loadChapterInfoById(2)
+    loadVersesByPage(1);
   }, []);
 
   return (
